@@ -1,0 +1,12 @@
+[package]
+name = "temptor"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+axum = "0.8.4"
+r2d2 = "0.8.10"
+redis = { version = "0.31.0", features = ["r2d2"] }
+serde = { version = "1.0.219", features = ["derive"] }
+serde_json = "1.0.140"
+tokio = { version = "1.45.1", features = ["rt-multi-thread"] }
