@@ -1,10 +1,16 @@
 mod redis_client;
 
-use axum::{Json, Router, extract::State, http::StatusCode, response::IntoResponse, routing::get};
+use axum::{
+    Json, Router,
+    extract::{Path, State},
+    http::StatusCode,
+    response::IntoResponse,
+    routing::get,
+};
 use r2d2::Pool;
-use redis::{Commands, RedisResult};
+use redis::Commands;
 use serde::{Deserialize, Serialize};
-use serde_json::{self, Value};
+use serde_json;
 use tokio::net::TcpListener;
 
 #[derive(Clone)]
@@ -25,7 +31,7 @@ async fn main() {
 
     let router = Router::new()
         .route("/", get(ping))
-        .route("/user", get(get_user).post(create_user))
+        .route("/user/{id}", get(get_user).post(create_user))
         .with_state(state);
 
     println!("Server starts at: {addr}");
@@ -44,9 +50,10 @@ struct User {
     email: String,
 }
 
-async fn get_user(State(state): State<AppState>) -> impl IntoResponse {
+async fn get_user(Path(id): Path<String>, State(state): State<AppState>) -> impl IntoResponse {
     let mut rd = state.redis_pool.get().unwrap();
-    let user: String = rd.hget("users", "user:1").unwrap();
+    let user_id = format!("user:{id}");
+    let user: String = rd.hget("users", user_id).unwrap();
 
     let data: User = serde_json::from_str(user.as_str()).unwrap();
 
@@ -57,13 +64,10 @@ async fn create_user(
     State(state): State<AppState>,
     Json(user): Json<User>,
 ) -> (StatusCode, Json<User>) {
-    // TODO:
-    // db.create_user(user);
-
     let id = format!("user:{}", user.id);
 
     let mut rd = state.redis_pool.get().unwrap();
-    let _: () = rd.set("K", 34).unwrap();
+
     let data = serde_json::to_string(&user).unwrap();
     let _: () = rd.hset("users", id, data).unwrap();
 
