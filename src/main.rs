@@ -73,3 +73,5 @@ async fn create_user(
 
     (StatusCode::OK, Json::from(user))
 }
+
+// async fn add_template(State(state): State<AppState>) {}

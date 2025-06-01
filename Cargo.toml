@@ -3,7 +3,12 @@ name = "temptor"
 version = "0.1.0"
 edition = "2024"
 
+[workspace]
+members = [".", "migration"]
+
 [dependencies]
+migration = { path = "migration" } # depends on your needs
+
 axum = "0.8.4"
 r2d2 = "0.8.10"
 redis = { version = "0.31.0", features = ["r2d2"] }
