@@ -1,6 +1,7 @@
 mod login;
 mod redis_client;
 mod register_user;
+mod token;
 
 use axum::{
     Router,
@@ -43,7 +44,7 @@ async fn main() {
         .route("/", get(ping))
         .route("/user", post(register_user::create_user))
         .route("/user/{id}", get(register_user::get_user))
-        .route("/login", post(login::login))
+        .route("/get-token", post(login::get_token))
         .with_state(state);
 
     println!("Server starts at: {addr}");
