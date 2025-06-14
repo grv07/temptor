@@ -24,14 +24,15 @@ async fn main() {
     let listener = TcpListener::bind(addr).await.unwrap();
 
     // Redis connections pool
-    let client = redis::Client::open("redis://127.0.0.1/").unwrap();
+    // let client = redis::Client::open("redis://0.0.0.0/").unwrap();
+    let client = redis::Client::open("redis://my-redis:6379").unwrap();
     let pool = r2d2::Pool::builder()
         .build(client)
         .expect("Error: Unable to connect with redis ...");
 
     let conn: DatabaseConnection =
         // postgres://postgres:admin@localhost/temptor
-        sea_orm::Database::connect("postgres://postgres:admin@localhost/temptor")
+        sea_orm::Database::connect("postgres://postgres:admin@my-db/temptor")
             .await
             .unwrap();
 
