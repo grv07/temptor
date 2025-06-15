@@ -1,19 +1,31 @@
-FROM rust:1.87.0-alpine
-
-RUN apk add --no-cache musl-dev libc-dev make gcc
-
+FROM lukemathwalker/cargo-chef:latest-rust-1 AS chef
 WORKDIR /app
 
-COPY Cargo.toml ./
-COPY Cargo.lock ./
-COPY entity .
-
-RUN rm -r src
-
-RUN mkdir src && echo "fn main() {}" > src/main.rs && cargo build --release && rm -r src
 
 COPY . .
 
-RUN cargo build --release || true
+# Install sea-orm-cli globally
+RUN cargo install sea-orm-cli
 
-CMD ["./target/release/temptor"]
+FROM chef AS planner
+COPY . .
+RUN cargo chef prepare --recipe-path recipe.json
+
+FROM chef AS builder 
+COPY --from=planner /app/recipe.json recipe.json
+
+# Build dependencies - this is the caching Docker layer!
+RUN cargo chef cook --release --recipe-path recipe.json
+
+# Build application
+COPY . .
+RUN cargo build --release
+
+# We do not need the Rust toolchain to run the binary!
+FROM debian:bookworm-slim AS runtime
+WORKDIR /app
+
+COPY --from=builder /app/target/release/temptor /usr/local/bin
+COPY --from=builder /usr/local/cargo/bin/sea-orm-cli /usr/local/bin/sea-orm-cli
+
+CMD ["temptor"]

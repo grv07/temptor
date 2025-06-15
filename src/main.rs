@@ -30,11 +30,9 @@ async fn main() {
         .build(client)
         .expect("Error: Unable to connect with redis ...");
 
-    let conn: DatabaseConnection =
-        // postgres://postgres:admin@localhost/temptor
-        sea_orm::Database::connect("postgres://postgres:admin@my-db/temptor")
-            .await
-            .unwrap();
+    let db_url = std::env::var("POSTGRES_URL")
+        .unwrap_or("postgres://postgres:admin@my-db/temptor".to_string());
+    let conn: DatabaseConnection = sea_orm::Database::connect(db_url).await.unwrap();
 
     let state = AppState {
         redis: pool,
